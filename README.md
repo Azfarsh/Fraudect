@@ -133,8 +133,6 @@ Check out our [YouTube Demo](https://www.youtube.com/watch?v=your-demo-video-lin
 - **Himanshu Menghrajani**  
   [GitHub](https://github.com/Himanshu2004-prog)
 
-- **Riday Gada**  
-  [GitHub](https://github.com/RidayGada)
 
 - **Azfar Shaikh**  
   [GitHub](https://github.com/Azfarsh)
