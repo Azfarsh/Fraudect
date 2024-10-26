@@ -97,8 +97,15 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '812863480086-6ea43ljoqdeg446t21fu1jo1tg7o3ldu.apps.googleusercontent.com'  # Example Client ID
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'  # Example Client Secret
+import os
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
+
+# Retrieve the values from the .env file
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 
 # Ensure the redirect URI is set to HTTPS for production
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = config('SOCIAL_AUTH_REDIRECT_IS_HTTPS', default=False, cast=bool)
