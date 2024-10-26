@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraudect Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #00188f;
+            --accent-color: #EC008C;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, rgba(0, 24, 143, 0.95), rgba(236, 0, 140, 0.95));
+        }
+        
+        .sidebar {
+            width: 250px;
+            min-height: calc(100vh - 70px);
+            transition: width 0.3s ease;
+        }
+        
+        .sidebar-collapsed {
+            width: 0;
+            overflow: hidden;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-size: 12px;
+        }
+        
+        .profile-dropdown:hover .dropdown-menu {
+            display: block;
+        }
+        
+        .alert-card {
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        
+        .alert-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .stats-card {
+            transition: transform 0.2s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 1030;
+                height: 100vh;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <button id="sidebarToggle" class="btn text-primary border-0">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="d-flex align-items-center ms-3">
+                    <i class="fas fa-shield-alt" style="font-size: 24px; color: #EC008C;"></i>
+                    <span class="fs-4 fw-bold ms-2 gradient-text">Fraudect</span>
+                </div>
+            </div>
+
+            <div class="d-none d-md-block mx-auto" style="width: 40%;">
+                <div class="position-relative">
+                    <input type="search" class="form-control rounded-pill" placeholder="Search transactions...">
+                    <i class="fas fa-search position-absolute end-0 top-50 translate-middle-y me-3 text-muted"></i>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <div class="position-relative mx-2">
+                    <button class="btn position-relative">
+                        <i class="fas fa-bell text-muted"></i>
+                        <span class="notification-badge bg-danger text-white">3</span>
+                    </button>
+                </div>
+
+                <div class="position-relative mx-2">
+                    <button class="btn position-relative">
+                        <i class="fas fa-envelope text-muted"></i>
+                        <span class="notification-badge bg-primary text-white">5</span>
+                    </button>
+                </div>
+
+                <div class="dropdown profile-dropdown">
+                    <div class="d-flex align-items-center" data-bs-toggle="dropdown">
+                        <img src="/api/placeholder/40/40" alt="Profile" class="rounded-circle" width="40">
+                        <div class="ms-2 d-none d-lg-block">
+                            <div class="fw-bold">John Doe</div>
+                            <div class="small text-muted">Administrator</div>
+                        </div>
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar and Main Content -->
+    <div class="d-flex" style="margin-top: 70px;">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar gradient-bg">
+            <div class="py-3">
+                <div class="nav flex-column">
+                    <a href="#" class="nav-link text-white active">
+                        <i class="fas fa-home me-2"></i>Dashboard
+                    </a>
+                    <a href="#" class="nav-link text-white">
+                        <i class="fas fa-bell me-2"></i>Alerts
+                    </a>
+                    <a href="#" class="nav-link text-white">
+                        <i class="fas fa-history me-2"></i>Transaction History
+                    </a>
+                    <a href="#" class="nav-link text-white">
+                        <i class="fas fa-chart-line me-2"></i>Analytics
+                    </a>
+                    <a href="#" class="nav-link text-white">
+                        <i class="fas fa-user me-2"></i>Profile
+                    </a>
+                    <a href="#" class="nav-link text-white">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content flex-grow-1 p-4" style="margin-left: 250px;">
+            <!-- Statistics Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h6 class="card-title text-primary mb-0">Total Transactions</h6>
+                                <i class="fas fa-exchange-alt text-primary"></i>
+                            </div>
+                            <h3 class="mb-0">1,234</h3>
+                            <p class="text-success mb-0"><i class="fas fa-arrow-up me-1"></i>12% this week</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h6 class="card-title text-danger mb-0">Fraud Alerts</h6>
+                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                            </div>
+                            <h3 class="mb-0">23</h3>
+                            <p class="text-danger mb-0"><i class="fas fa-arrow-up me-1"></i>5% this week</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card stats-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h6 class="card-title text-primary mb-0">Response Time</h6>
+                                <i class="fas fa-clock text-primary"></i>
+                            </div>
+                            <h3 class="mb-0">0.5s</h3>
+                            <p class="text-success mb-0"><i class="fas fa-arrow-down me-1"></i>0.1s improvement</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Alerts -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Recent Alerts</h5>
+                    <div class="alert-card mb-3 p-3 bg-danger bg-opacity-10" style="border-color: var(--accent-color);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Suspicious Transaction Detected</h6>
+                                <p class="mb-0 text-muted">Amount: $1,999.99 - Location: New York, USA</p>
+                            </div>
+                            <span class="text-danger">2 mins ago</span>
+                        </div>
+                    </div>
+
+                    <div class="alert-card p-3 bg-primary bg-opacity-10" style="border-color: var(--primary-color);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Verified Transaction</h6>
+                                <p class="mb-0 text-muted">Amount: $50.00 - Location: Los Angeles, USA</p>
+                            </div>
+                            <span class="text-primary">5 mins ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Latest Transactions -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Latest Transactions</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#TRX-789012</td>
+                                    <td>$1,999.99</td>
+                                    <td><span class="badge bg-danger">Suspicious</span></td>
+                                    <td>2 mins ago</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm">Review</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>#TRX-789011</td>
+                                    <td>$50.00</td>
+                                    <td><span class="badge bg-success">Verified</span></td>
+                                    <td>5 mins ago</td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm">Review</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            function toggleSidebar() {
+                sidebar.classList.toggle('sidebar-collapsed');
+                if (sidebar.classList.contains('sidebar-collapsed')) {
+                    mainContent.style.marginLeft = '0';
+                } else {
+                    mainContent.style.marginLeft = '250px';
+                }
+            }
+            
+            sidebarToggle.addEventListener('click', toggleSidebar);
+
+            // Responsive behavior
+            function handleResize() {
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('sidebar-collapsed');
+                    mainContent.style.marginLeft = '0';
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    mainContent.style.marginLeft = '250px';
+                }
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize(); // Initial check
+
+            // Add hover effect to nav links
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                    }
+                });
+                
+                link.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.backgroundColor = 'transparent';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

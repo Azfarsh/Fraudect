@@ -1,13 +1,19 @@
 from pathlib import Path
+import os
+from decouple import config
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-1**ek641@x+(hg2rg(xas_t4ywab5j-tyc4z!@i#*i_cfgedjg'
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = True  # Change to False in production
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = config('DEBUG', default=True, cast=bool)  # Set to False in production
 
-ALLOWED_HOSTS = []  # Specify allowed hosts in production
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=[], cast=lambda v: [s.strip() for s in v.split(',')])
 
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -16,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'transaction',
+    'social_django',  # Social Auth for Google login
 ]
 
 MIDDLEWARE = [
@@ -41,6 +48,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',  # Needed for Social Auth
+                'social_django.context_processors.login_redirect',  # Needed for Social Auth
             ],
         },
     },
@@ -48,14 +57,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'fraud_detection.wsgi.application'
 
+# Twilio Integration
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER')
+
+# Database
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'myFreeDB',
-        'USER': 'Azfaradmin',
-        'PASSWORD': 'Blitz123',
-        'HOST': 'myfreesqldbserverr.database.windows.net',
-        'PORT': '1433',  # SQL Server default port
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT', default='1433'),
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
             'extra_params': 'TrustServerCertificate=yes;',  # Optional for SSL/Trust issues
@@ -63,28 +78,42 @@ DATABASES = {
     }
 }
 
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# Authentication settings
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'
+
+# Google OAuth setup
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '812863480086-6ea43ljoqdeg446t21fu1jo1tg7o3ldu.apps.googleusercontent.com'  # Example Client ID
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'  # Example Client Secret
+
+# Ensure the redirect URI is set to HTTPS for production
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = config('SOCIAL_AUTH_REDIRECT_IS_HTTPS', default=False, cast=bool)
+
+# Internationalization
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'  # Adjust to your timezone
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Add for production
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'fraud_detection/static')]
 
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

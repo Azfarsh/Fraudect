@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us - Fraudect{% endblock %}
+
+{% block content %}
+<style>
+    /* About Section Styles */
+    .about-section {
+        padding: 5rem 2rem;
+        background: #f4f7fa; /* Light background for contrast */
+        color: #333; /* Dark text for readability */
+    }
+
+    .about-title {
+        text-align: center;
+        font-size: 3rem;
+        margin-bottom: 2rem;
+        color: #00188f; /* Main brand color */
+    }
+
+    .about-content {
+        max-width: 800px;
+        margin: 0 auto;
+        font-size: 1.2rem;
+        line-height: 1.6;
+        text-align: justify; /* Justify text for a cleaner look */
+    }
+
+    .about-content p {
+        margin-bottom: 1.5rem; /* Space between paragraphs */
+    }
+
+    .about-features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .feature-card {
+        padding: 2rem;
+        border-radius: 15px;
+        background: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #EC008C; /* Accent color */
+        margin-bottom: 1rem;
+    }
+
+    .feature-title {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: #00188f;
+    }
+
+    /* Call to Action Section */
+    .cta-section {
+        background: #53BDA5;
+        color: white;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin-top: 3rem;
+    }
+
+    .cta-section h2 {
+        margin-bottom: 1rem;
+        font-size: 2.5rem;
+    }
+
+    .cta-button {
+        padding: 1rem 2.5rem;
+        background: white;
+        color: #00188f;
+        text-decoration: none;
+        border-radius: 30px;
+        font-weight: bold;
+        transition: transform 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .cta-button:hover {
+        transform: scale(1.05);
+    }
+</style>
+
+<section class="about-section">
+    <h1 class="about-title">About Fraudect</h1>
+    <div class="about-content">
+        <p>Fraudect is an innovative solution designed to combat fraudulent transactions in real-time using advanced machine learning algorithms. Our goal is to protect consumers and businesses by ensuring that every transaction is thoroughly analyzed for signs of fraud before completion.</p>
+        <p>With the rise of digital transactions, the need for robust fraud detection mechanisms has never been greater. Fraudect leverages AI technology to analyze transaction patterns, detect anomalies, and provide instant alerts, ensuring a secure transaction environment.</p>
+    </div>
+
+    <h2 style="text-align: center; margin-top: 3rem;">Key Features</h2>
+    <div class="about-features">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3 class="feature-title">AI-Powered Detection</h3>
+            <p>Utilizing sophisticated algorithms, Fraudect analyzes each transaction for suspicious patterns and behaviors.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h3 class="feature-title">Instant Notifications</h3>
+            <p>Receive immediate alerts for any potentially fraudulent activity, allowing for quick response actions.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3 class="feature-title">Comprehensive Analytics</h3>
+            <p>Access detailed reports and analytics to understand transaction trends and fraud metrics.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3 class="feature-title">User-Friendly Interface</h3>
+            <p>Designed for ease of use, Fraudect offers a clean and intuitive interface for monitoring transactions.</p>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <h2>Join Us in the Fight Against Fraud!</h2>
+    <p>Become a part of the Fraudect community and ensure secure transactions for everyone.</p>
+    <a href="#" class="cta-button">Get Started</a>
+</section>
+{% endblock %}

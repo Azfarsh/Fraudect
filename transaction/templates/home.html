@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - AI-Based Fake Transaction Detection{% endblock %}
+
+{% block content %}
+<style>
+    /* Styles for the hero section */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(0, 24, 143, 0.95), rgba(236, 0, 140, 0.95));
+        padding: 5rem 2rem;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        animation: slideDown 0.8s ease-out;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        animation: fadeIn 1s ease-out 0.5s both;
+    }
+
+    .stats-counter {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin: 3rem auto;
+        max-width: 1000px;
+    }
+
+    .stat-box {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        transform: translateY(50px);
+        opacity: 0;
+        animation: slideUp 0.8s ease-out forwards;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(45deg, #fff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Styles for the features section */
+    .features-section {
+        padding: 5rem 2rem;
+        background: #fff;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        padding: 2rem;
+        border-radius: 15px;
+        background: white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+    }
+
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #00188f;
+    }
+
+    /* Styles for the workflow section */
+    .workflow-section {
+        background: #f8f9fa; /* Replace with your home page background color */
+        padding: 5rem 2rem;
+    }
+
+    .workflow-steps {
+        display: flex; /* Align items in a row */
+        justify-content: center; /* Center the items horizontally */
+        gap: 2rem; /* Space between the cards */
+        max-width: 1200px;
+        margin: 3rem auto; /* Center the workflow section */
+    }
+
+    .step-card {
+        flex: 1; /* Make each card flexible to take equal space */
+        min-width: 250px; /* Minimum width to prevent too small cards */
+        max-width: 300px; /* Maximum width for consistency */
+        padding: 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+
+    .step-number {
+        position: absolute;
+        top: -20px;
+        left: 20px;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #00188f, #EC008C);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
+    /* Styles for the CTA section */
+    .cta-section {
+        background: linear-gradient(135deg, #00188f, #EC008C);
+        padding: 5rem 2rem;
+        text-align: center;
+        color: white;
+      
+    }
+
+    .cta-button {
+        display: inline-block;
+        padding: 1rem 2.5rem;
+        background: white;
+        color: #00188f;
+        text-decoration: none;
+        border-radius: 30px;
+        font-weight: bold;
+        transition: transform 0.3s ease;
+        margin-top: 2rem;
+    }
+
+    .cta-button:hover {
+        transform: scale(1.05);
+    }
+
+    /* Animations */
+    @keyframes slideDown {
+        from {
+            transform: translateY(-100px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
+
+<main>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Secure Your Transactions with AI</h1>
+            <p class="hero-subtitle">Real-time fraud detection powered by advanced machine learning</p>
+            <a href="#features" class="cta-button">Discover How It Works</a>
+        </div>
+        <div class="stats-counter">
+            <div class="stat-box">
+                <div class="stat-number">99.9%</div>
+                <div class="stat-label">Accuracy Rate</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">0.5s</div>
+                <div class="stat-label">Response Time</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Monitoring</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <h2 style="text-align: center; margin-bottom: 3rem;">Why Choose Fraudect?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Advanced AI Detection</h3>
+                <p>Our sophisticated machine learning models analyze patterns to identify suspicious transactions in real-time.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>Instant Alerts</h3>
+                <p>Receive immediate notifications about potential fraudulent activities through SMS and email.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Real-time Analytics</h3>
+                <p>Monitor transaction patterns and fraud metrics through our interactive dashboard.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workflow Section -->
+    <section class="workflow-section">
+        <h2 style="text-align: center; margin-bottom: 3rem;">How It Works</h2>
+        <div class="workflow-steps">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>SMS Reception</h3>
+                <p>System receives transaction SMS through secure Twilio integration</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Data Processing</h3>
+                <p>Transaction details are extracted and preprocessed for analysis</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>AI Analysis</h3>
+                <p>ML models evaluate transaction patterns for fraud indicators</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h3>Instant Response</h3>
+                <p>Receive immediate notification about transaction status</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>Ready to Secure Your Transactions?</h2>
+        <p>Join us today to experience the next generation of fraud detection!</p>
+        <a href="{% url 'login' %}" class="cta-button">Get Started</a>  <!-- Updated href -->
+    </section>
+    
+</main>
+{% endblock %}
