@@ -62,6 +62,14 @@ TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER')
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',  # This will create a file named db.sqlite3 in your project's root directory
+    }
+}
+
+'''
 # Database
 DATABASES = {
     'default': {
@@ -76,7 +84,7 @@ DATABASES = {
             'extra_params': 'TrustServerCertificate=yes;',  # Optional for SSL/Trust issues
         },
     }
-}
+}'''
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -98,10 +106,9 @@ AUTHENTICATION_BACKENDS = (
 )
 
 import os
-from dotenv import load_dotenv
+
 
 # Load .env file
-load_dotenv()
 
 # Retrieve the values from the .env file
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
