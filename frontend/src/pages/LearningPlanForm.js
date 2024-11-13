@@ -1,184 +1,372 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Shield, Send, Bot, User, RefreshCcw, AlertCircle, Lock, AlertTriangle } from 'lucide-react';
 
-const LearningPlanForm = () => {
-  const [skill, setSkill] = useState('');
-  const [dailyHours, setDailyHours] = useState('');
-  const [months, setMonths] = useState('');
-  const [learningPlan, setLearningPlan] = useState(null);
+const API_KEY = "YOUR_GEMINI_API_KEY"; // Replace with your Gemini API key
+const PROXY_URL = 'http://localhost:3001/fraud-detect'; // Your backend endpoint
+
+const FraudDetectionChatbot = () => {
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content: "Hello! I'm your AI Fraud Detection Assistant. I can help analyze suspicious activities, detect potential fraud patterns, and provide security recommendations. Please describe any suspicious activity you'd like me to analyze."
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false); // Add loading state
-  const [successMessage, setSuccessMessage] = useState('');
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!inputMessage.trim()) return;
+
+    const userMessage = {
+      role: 'user',
+      content: inputMessage
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsLoading(true);
     setError(null);
-    setSuccessMessage('');
-    setLoading(true); // Set loading to true when the form is submitted
 
     try {
-      const response = await fetch('http://localhost:3001/learning', {
+      const response = await fetch(PROXY_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`,
         },
-        body: JSON.stringify({ skill, dailyHours, months }),
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: `You are an advanced fraud detection AI assistant.
+                       Analyze user queries for potential fraud patterns,
+                       provide detailed security recommendations, and help
+                       users understand various types of financial fraud.
+                       Be precise, thorough, and always prioritize security.
+                       If a serious fraud risk is detected, provide clear
+                       steps for immediate action.`
+            },
+            ...messages,
+            userMessage
+          ]
+        })
       });
 
       if (!response.ok) {
-        const message = await response.json();
-        throw new Error(message.error || 'Failed to generate learning plan');
+        throw new Error(`API Error: ${response.status}`);
       }
 
       const data = await response.json();
-      setLearningPlan(data.plan);
-      setSuccessMessage('Learning plan successfully generated!');
+      const analysisContent = data.analysis || data.message || data.choices?.[0]?.message?.content;
+      
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: analysisContent
+      }]);
     } catch (error) {
-      setError(error.message);
+      console.error('Chat Error:', error);
+      setError('Unable to process fraud analysis. Please try again later.');
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "I apologize, but I'm experiencing technical difficulties analyzing your request. Please try again in a moment."
+      }]);
     } finally {
-      setLoading(false); // Set loading to false when the request is complete
+      setIsLoading(false);
     }
-  };
-
-  const handleDailyHoursChange = (e) => {
-    const value = e.target.value;
-    if (value >= 0 && value <= 24) {
-      setDailyHours(value);
-    }
-  };
-
-  const handleMonthsChange = (e) => {
-    const value = e.target.value;
-    if (value > 0) {
-      setMonths(value);
-    }
-  };
-
-  const renderLearningPlan = () => {
-    if (!learningPlan) return null;
-
-    if (typeof learningPlan === 'object' && !Array.isArray(learningPlan)) {
-      return (
-        <div className="mt-6">
-          <h2 className="text-xl font-bold mb-2">Your Personalized Learning Plan</h2>
-          <div className="bg-gray-100 p-4 rounded">
-            <ol className="list-decimal pl-5">
-              {Object.entries(learningPlan).map(([key, task]) => (
-                <li key={key} className="mb-2">
-                  {task}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      );
-    }
-
-    if (typeof learningPlan === 'string') {
-      return (
-        <div className="mt-6">
-          <h2 className="text-xl font-bold mb-2">Your Personalized Learning Plan</h2>
-          <div className="bg-gray-100 p-4 rounded">
-            <ol className="list-decimal pl-5">
-              {learningPlan.split('\n').filter(task => task.trim() !== '').map((task, index) => (
-                <li key={index} className="mb-2">
-                  {task.trim()}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      );
-    }
-
-    return <div>Unsupported format of learning plan data.</div>;
-  };
-
-  // Inline styles for the loading spinner
-  const spinnerStyle = {
-    border: '4px solid rgba(0, 0, 0, 0.1)',
-    borderRadius: '50%',
-    borderTop: '4px solid #e74c3c',
-    width: '24px',
-    height: '24px',
-    animation: 'spin 1s linear infinite',
-  };
-
-  // Inline styles for the spinner container
-  const spinnerContainerStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: '10px',
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen flex flex-col justify-center items-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-[60rem] border border-gray-300">
-        <h1 className="text-2xl font-bold mb-4">Personalized Learning Plan Generator</h1>
-        <form onSubmit={handleSubmit} className="relative">
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2" htmlFor="skill">
-              Skill
-            </label>
-            <input
-              type="text"
-              id="skill"
-              value={skill}
-              onChange={(e) => setSkill(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2" htmlFor="dailyHours">
-              Daily Hours (0-24)
-            </label>
-            <input
-              type="number"
-              id="dailyHours"
-              value={dailyHours}
-              onChange={handleDailyHoursChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-              min="0"
-              max="24"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2" htmlFor="months">
-              Months
-            </label>
-            <input
-              type="number"
-              id="months"
-              value={months}
-              onChange={handleMonthsChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-              min="1"
-            />
-          </div>
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded flex items-center"
-            style={{ position: 'relative' }}
-          >
-            Generate Learning Plan
-            {loading && (
-              <div style={spinnerContainerStyle}>
-                <div style={spinnerStyle}></div>
-              </div>
-            )}
-          </button>
-        </form>
-
-        {error && <div className="text-red-500 mt-4">{error}</div>}
-        {successMessage && <div className="text-green-500 mt-4">{successMessage}</div>}
-
-        {renderLearningPlan()}
+    <div className="chat-container">
+      <div className="chat-header">
+        <div className="header-content">
+          <Shield className="header-icon primary" />
+          <h1>AI Fraud Detection Assistant</h1>
+        </div>
+        <div className="header-security">
+          <AlertTriangle className="header-icon warning" />
+          <Lock className="header-icon secondary" />
+        </div>
       </div>
+
+      <div className="messages-container">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`message-wrapper ${message.role === 'assistant' ? 'assistant' : 'user'}`}
+          >
+            <div className="avatar">
+              {message.role === 'assistant' ? (
+                <Bot className="avatar-icon assistant" />
+              ) : (
+                <User className="avatar-icon user" />
+              )}
+            </div>
+            <div className="message">
+              {message.content}
+            </div>
+          </div>
+        ))}
+        {isLoading && (
+          <div className="loading">
+            <RefreshCcw className="loading-icon" />
+            <span>Analyzing suspicious patterns...</span>
+          </div>
+        )}
+        {error && (
+          <div className="error-message">
+            <AlertCircle className="error-icon" />
+            <span>{error}</span>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="security-alert">
+        <AlertCircle className="alert-icon" />
+        <p>Secure Channel: All communications are encrypted. Never share sensitive financial data or credentials.</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="chat-input">
+        <input
+          type="text"
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          placeholder="Describe any suspicious activity..."
+          disabled={isLoading}
+        />
+        <button type="submit" disabled={isLoading || !inputMessage.trim()}>
+          <Send className="send-icon" />
+        </button>
+      </form>
+
+      <style jsx>{`
+        .chat-container {
+          width: 100%;
+          max-width: 700px;
+          height: 600px;
+          margin: 0 auto;
+          border: 1px solid #e5e7eb;
+          border-radius: 16px;
+          display: flex;
+          flex-direction: column;
+          background: linear-gradient(160deg, #f8fafc 0%, #eff6ff 100%);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-header {
+          padding: 16px 24px;
+          border-bottom: 1px solid #e5e7eb;
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(10px);
+          border-radius: 16px 16px 0 0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .header-content {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .header-security {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .header-icon {
+          width: 24px;
+          height: 24px;
+        }
+
+        .header-icon.primary {
+          color: #2563eb;
+        }
+
+        .header-icon.secondary {
+          color: #16a34a;
+        }
+
+        .header-icon.warning {
+          color: #eab308;
+        }
+
+        h1 {
+          margin: 0;
+          font-size: 1.25rem;
+          color: #1e40af;
+          font-weight: 600;
+        }
+
+        .messages-container {
+          flex: 1;
+          overflow-y: auto;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .message-wrapper {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          max-width: 85%;
+        }
+
+        .message-wrapper.user {
+          flex-direction: row-reverse;
+          margin-left: auto;
+        }
+
+        .avatar {
+          padding: 8px;
+          border-radius: 12px;
+          background: #f1f5f9;
+          border: 1px solid #e2e8f0;
+        }
+
+        .avatar-icon {
+          width: 20px;
+          height: 20px;
+        }
+
+        .avatar-icon.assistant {
+          color: #2563eb;
+        }
+
+        .avatar-icon.user {
+          color: #16a34a;
+        }
+
+        .message {
+          padding: 12px 16px;
+          border-radius: 12px;
+          background: white;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+          line-height: 1.5;
+          font-size: 0.95rem;
+          white-space: pre-wrap;
+        }
+
+        .user .message {
+          background: #2563eb;
+          color: white;
+        }
+
+        .loading {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #2563eb;
+          font-size: 0.9rem;
+        }
+
+        .loading-icon {
+          width: 20px;
+          height: 20px;
+          animation: spin 1s linear infinite;
+        }
+
+        .error-message {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #dc2626;
+          padding: 12px;
+          background: #fee2e2;
+          border-radius: 8px;
+          font-size: 0.9rem;
+        }
+
+        .error-icon {
+          width: 18px;
+          height: 18px;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .security-alert {
+          margin: 0 16px;
+          padding: 12px;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .alert-icon {
+          width: 16px;
+          height: 16px;
+          color: #16a34a;
+        }
+
+        .chat-input {
+          display: flex;
+          padding: 12px;
+          background: white;
+          border-top: 1px solid #e5e7eb;
+        }
+
+        .chat-input input {
+          flex: 1;
+          padding: 8px 12px;
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          font-size: 1rem;
+        }
+
+        .chat-input input:focus {
+          outline: none;
+          border-color: #2563eb;
+          ring: 2px solid #2563eb;
+        }
+
+        .chat-input button {
+          background: #2563eb;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          margin-left: 12px;
+          border-radius: 50%;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .chat-input button:hover {
+          background: #1d4ed8;
+        }
+
+        .chat-input button:disabled {
+          background: #94a3b8;
+          cursor: not-allowed;
+        }
+
+        .send-icon {
+          width: 20px;
+          height: 20px;
+        }
+      `}</style>
     </div>
   );
 };
 
-export default LearningPlanForm;
+export default FraudDetectionChatbot;

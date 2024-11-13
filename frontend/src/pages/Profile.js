@@ -1,311 +1,284 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { FaCamera } from 'react-icons/fa';
-import { MdArrowDropDown } from 'react-icons/md';
-import { motion } from 'framer-motion';
-import { Slide } from 'react-awesome-reveal';
-import { BiRocket } from 'react-icons/bi';
+import { Camera } from 'lucide-react';
+import { db, storage } from '../firebase'; // Ensure you have the correct imports for Firebase
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
-const educationOptions = [
-  'High School',
-  'Associate Degree',
-  'Bachelor’s Degree',
-  'Master’s Degree',
-  'Doctorate'
-];
-
-const countries = [
-  'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 'Spain', 'Italy', 'Netherlands', 'Brazil',
-  'India', 'China', 'Japan', 'South Korea', 'Mexico', 'Russia', 'South Africa', 'Nigeria', 'Argentina', 'Chile', 'Colombia',
-  'Turkey', 'Saudi Arabia', 'United Arab Emirates', 'Singapore', 'Malaysia', 'Thailand', 'Philippines', 'Vietnam', 'New Zealand',
-  'Norway', 'Sweden', 'Denmark', 'Finland', 'Iceland', 'Poland', 'Greece', 'Portugal', 'Ireland', 'Belgium'
-].sort();
-
-const ProfilePage = () => {
-  const [profileImage, setProfileImage] = useState('');
-  const [name, setName] = useState('');
-  const [country, setCountry] = useState('');
-  const [email, setEmail] = useState('');
-  const [education, setEducation] = useState('');
-  const [socialLinks, setSocialLinks] = useState({
-    github: '',
-    linkedin: '',
-    twitter: '',
-    facebook: ''
+const ProfileDashboard = () => {
+  const [profileImage, setProfileImage] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    city: '',
+    country: ''
   });
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isEducationDropdownOpen, setIsEducationDropdownOpen] = useState(false);
-  const [filteredCountries, setFilteredCountries] = useState(countries);
-  const [filteredEducationOptions, setFilteredEducationOptions] = useState(educationOptions);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
-  const navigate = useNavigate();  // Initialize useNavigate for redirection
+  // Image upload handling
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        showNotification('Please upload an image file', 'error');
+        return;
+      }
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setProfileImage(URL.createObjectURL(e.target.files[0]));
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('Image size should be less than 5MB', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfileImage(e.target.result);
+        showNotification('Profile picture updated successfully!', 'success');
+      };
+      reader.readAsDataURL(file);
     }
   };
 
+  // Show notification helper
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ ...notification, show: false });
+    }, 3000);
+  };
+
+  // Handle form submission and save data to Firestore
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !country || !email || !education) {
-      setError('Please fill in all the required fields.');
+
+    // Validate email
+    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      showNotification('Please enter a valid email address.', 'error');
       return;
     }
 
     try {
-      await addDoc(collection(db, 'profiles'), {
-        name,
-        country,
-        email,
-        education,
-        socialLinks,
-        profileImage,
-        timestamp: Timestamp.fromDate(new Date())  // Add timestamp of the request
-      });
+      if (profileImage) {
+        // Upload image to Firebase Storage
+        const imageRef = ref(storage, `profileImages/${Date.now()}`);
+        const uploadTask = uploadBytesResumable(imageRef, profileImage);
 
-      setMessage('Profile created successfully!');
-      setError('');
-      setName('');
-      setCountry('');
-      setEmail('');
-      setEducation('');
-      setSocialLinks({
-        github: '',
-        linkedin: '',
-        twitter: '',
-        facebook: ''
-      });
-      setProfileImage('');
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            // You can track the progress if needed here
+          },
+          (error) => {
+            console.error('Image upload failed:', error);
+            showNotification('Error uploading image', 'error');
+          },
+          async () => {
+            // Get the image download URL
+            const imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
 
-      // Redirect to User Dashboard page upon success
-      navigate('/user-dashboard');
+            // Save form data and image URL to Firestore
+            await addDoc(collection(db, 'UserProfiles'), {
+              ...formData,
+              profileImage: imageUrl,
+              createdAt: new Date(),
+            });
 
-      // Display the success message with a rocket icon
-      setTimeout(() => {
-        alert('🚀 Profile created successfully!');
-      }, 100);
-
+            showNotification('Profile successfully updated!', 'success');
+            // Clear form data and image after submission
+            setFormData({
+              firstName: '',
+              lastName: '',
+              email: '',
+              phone: '',
+              dateOfBirth: '',
+              city: '',
+              country: ''
+            });
+            setProfileImage(null);
+          }
+        );
+      } else {
+        showNotification('Please upload a profile image', 'error');
+      }
     } catch (error) {
-      console.error('Error creating profile: ', error);
-      setError('Failed to create profile. Please try again.');
-      setMessage('');
+      console.error('Error saving profile:', error);
+      showNotification('Error saving changes', 'error');
     }
   };
 
-  const handleCountryClick = (selectedCountry) => {
-    setCountry(selectedCountry);
-    setIsDropdownOpen(false);
+  // Handle phone number formatting
+  const handlePhoneChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    const match = value.match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+    value = !match[2] ? match[1] : `(${match[1]}) ${match[2]}${match[3] ? '-' + match[3] : ''}`;
+    setFormData({ ...formData, phone: value });
   };
 
-  const handleCountryInputChange = (e) => {
-    const query = e.target.value.toLowerCase();
-    setCountry(query);
-    setFilteredCountries(countries.filter(c => c.toLowerCase().includes(query)));
-  };
-
-  const handleEducationClick = (selectedEducation) => {
-    setEducation(selectedEducation);
-    setIsEducationDropdownOpen(false);
-  };
-
-  const handleEducationInputChange = (e) => {
-    const query = e.target.value.toLowerCase();
-    setEducation(query);
-    setFilteredEducationOptions(educationOptions.filter(e => e.toLowerCase().includes(query)));
+  // Handle form field changes
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-50 to-blue-200 flex items-center justify-center p-6">
-      <motion.div
-        className="bg-white shadow-lg rounded-lg overflow-hidden w-full max-w-3xl border border-gray-300"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="relative w-full h-48 bg-gradient-to-r from-blue-400 to-blue-600">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div
-              className="h-36 w-36 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center relative"
-              whileHover={{ scale: 1.1, rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 0.3 }}
-            >
-              <img
-                className="h-36 w-36 rounded-full object-cover"
-                src={profileImage || 'https://via.placeholder.com/150'}
-                alt="Profile"
-              />
-              <input
-                type="file"
-                accept="image/*"
-                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
-                onChange={handleImageChange}
-              />
-              <div
-                className="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full shadow-md cursor-pointer hover:bg-blue-600 transform hover:scale-110 transition-transform"
-                onClick={() => document.querySelector('input[type="file"]').click()}
-              >
-                <FaCamera className="text-white text-xl" />
-              </div>
-            </motion.div>
-          </div>
+    <div className="min-h-screen bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-purple-900 to-slate-900 text-white py-8 px-4 animate-gradient-xy">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12 animate-fade-in">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-pulse">
+            Profile Dashboard
+          </h1>
+          <p className="text-gray-300 text-xl font-light tracking-wide">
+            Manage your personal information with style
+          </p>
         </div>
-        <div className="p-6 space-y-6">
-          <Slide direction="up" duration={500}>
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">{name || 'Your Name'}</h2>
-              <p className="text-lg text-gray-600 mb-4">Fill in your details to create your profile</p>
-              {message && (
-                <motion.div
-                  className="flex items-center justify-center space-x-2 p-4 bg-green-100 text-green-600 rounded-md border border-green-300"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <BiRocket className="text-2xl" />
-                  <p>{message}</p>
-                </motion.div>
+
+        <div className="relative w-48 h-48 mx-auto mb-12 group">
+          <div 
+            className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-1 animate-spin-slow cursor-pointer hover:scale-105 transition-transform duration-500 ease-out"
+            onClick={() => document.getElementById('avatar-input').click()}
+          >
+            <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center overflow-hidden">
+              {profileImage ? (
+                <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-7xl animate-bounce spin-slow 5s">👤</span>
               )}
-              {error && <p className="text-red-600 text-center mt-4">{error}</p>}
             </div>
-          </Slide>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Name</label>
+          </div>
+          <button 
+            className="absolute bottom-2 right-2 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-purple-600 transform hover:scale-110 transition-all duration-300 animate-pulse group-hover:animate-none"
+            onClick={() => document.getElementById('avatar-input').click()}
+          >
+            <Camera className="w-6 h-6" />
+          </button>
+          <input
+            type="file"
+            id="avatar-input"
+            hidden
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20 transform hover:scale-[1.01] transition-all duration-300">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="group">
+                <label className="block text-gray-300 text-sm mb-2 group-hover:text-blue-400 transition-colors duration-300">
+                  First Name
+                </label>
                 <input
-                  type="text"
-                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transform transition-all duration-300 hover:border-purple-500"
+                  placeholder="Enter your first name"
+                  required
                 />
               </div>
-              <div className="relative">
-                <label className="block text-gray-700 font-medium mb-1">Country</label>
+              <div className="group">
+                <label className="block text-gray-300 text-sm mb-2 group-hover:text-blue-400 transition-colors duration-300">
+                  Last Name
+                </label>
                 <input
-                  type="text"
-                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
-                  placeholder="Select your country"
-                  value={country}
-                  onChange={handleCountryInputChange}
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transform transition-all duration-300 hover:border-purple-500"
+                  placeholder="Enter your last name"
+                  required
                 />
-                <MdArrowDropDown
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                />
-                {isDropdownOpen && (
-                  <motion.ul
-                    className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto z-10"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {filteredCountries.map((c, index) => (
-                      <li
-                        key={index}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleCountryClick(c)}
-                      >
-                        {c}
-                      </li>
-                    ))}
-                  </motion.ul>
-                )}
               </div>
-              <div className="relative">
-                <label className="block text-gray-700 font-medium mb-1">Education</label>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="group">
+                <label className="block text-gray-300 text-sm mb-2 group-hover:text-blue-400 transition-colors duration-300">
+                  Email Address
+                </label>
                 <input
-                  type="text"
-                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
-                  placeholder="Select your education level"
-                  value={education}
-                  onChange={handleEducationInputChange}
-                  onClick={() => setIsEducationDropdownOpen(!isEducationDropdownOpen)}
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transform transition-all duration-300 hover:border-purple-500"
+                  placeholder="Enter your email"
+                  required
                 />
-                <MdArrowDropDown
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-                  onClick={() => setIsEducationDropdownOpen(!isEducationDropdownOpen)}
-                />
-                {isEducationDropdownOpen && (
-                  <motion.ul
-                    className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto z-10"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {filteredEducationOptions.map((e, index) => (
-                      <li
-                        key={index}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleEducationClick(e)}
-                      >
-                        {e}
-                      </li>
-                    ))}
-                  </motion.ul>
-                )}
               </div>
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Email</label>
+              <div className="group">
+                <label className="block text-gray-300 text-sm mb-2 group-hover:text-blue-400 transition-colors duration-300">
+                  Phone Number
+                </label>
                 <input
-                  type="email"
-                  className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
-                  placeholder="example@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handlePhoneChange}
+                  className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transform transition-all duration-300 hover:border-purple-500"
+                  placeholder="Enter your phone number"
+                  required
                 />
               </div>
-              <div className="space-y-4">
-                <label className="block text-gray-700 font-medium mb-1">Social Links (Optional)</label>
-                <div className="flex flex-col space-y-2">
-                  <input
-                    type="text"
-                    className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
-                    placeholder="GitHub URL"
-                    value={socialLinks.github}
-                    onChange={(e) => setSocialLinks({ ...socialLinks, github: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
-                    placeholder="LinkedIn URL"
-                    value={socialLinks.linkedin}
-                    onChange={(e) => setSocialLinks({ ...socialLinks, linkedin: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
-                    placeholder="Twitter URL"
-                    value={socialLinks.twitter}
-                    onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
-                    placeholder="Facebook URL"
-                    value={socialLinks.facebook}
-                    onChange={(e) => setSocialLinks({ ...socialLinks, facebook: e.target.value })}
-                  />
-                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="group">
+                <label className="block text-gray-300 text-sm mb-2 group-hover:text-blue-400 transition-colors duration-300">
+                  Date of Birth
+                </label>
+                <input
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transform transition-all duration-300 hover:border-purple-500"
+                  placeholder="Enter your birthdate"
+                  required
+                  type="date"
+                />
               </div>
-              <button
-                type="submit"
-                className="w-full py-3 bg-blue-500 text-white font-bold rounded-md shadow-md hover:bg-blue-600 transition-colors"
+              <div className="group">
+                <label className="block text-gray-300 text-sm mb-2 group-hover:text-blue-400 transition-colors duration-300">
+                  City
+                </label>
+                <input
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transform transition-all duration-300 hover:border-purple-500"
+                  placeholder="Enter your city"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8">
+              <div className="group">
+                <label className="block text-gray-300 text-sm mb-2 group-hover:text-blue-400 transition-colors duration-300">
+                  Country
+                </label>
+                <input
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transform transition-all duration-300 hover:border-purple-500"
+                  placeholder="Enter your country"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="text-center mt-8">
+              <button 
+                type="submit" 
+                className="px-8 py-3 bg-blue-600 text-white rounded-xl text-lg font-semibold shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
-                Create Profile
+                Save Profile
               </button>
             </div>
           </form>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
 
-export default ProfilePage;
+export default ProfileDashboard;

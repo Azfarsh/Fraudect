@@ -1,0 +1,24 @@
+.chatbot-container {
+    position: relative;
+    height: 80vh;
+    width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background: #f8f8f8;
+    border-radius: 10px;
+  }
+  
+  .chatbot-container .sc-bdVaJa {
+    background: #fff;
+    border-radius: 10px;
+  }
+  
+  .chatbot-container .sc-bdVaJa .sc-kpOJdX {
+    background: #f1f1f1;
+    padding: 15px;
+  }
+  
+  .chatbot-container .sc-bdVaJa .sc-bdVaJa .sc-bdVaJa {
+    border-radius: 10px;
+  }
+  

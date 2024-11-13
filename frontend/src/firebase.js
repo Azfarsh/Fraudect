@@ -1,18 +1,19 @@
-// Import the functions you need from the SDKs you need
+// Import the functions you need from the Firebase SDKs
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';  // Import Firestore
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
-// Your web app's Firebase configuration
+// Firebase configuration using environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyB5oVkNOjOrqDpLriH26fpBjGUWEehuCRg",
-  authDomain: "ascendmentor-6d81d.firebaseapp.com",
-  projectId: "ascendmentor-6d81d",
-  storageBucket: "ascendmentor-6d81d.appspot.com",
-  messagingSenderId: "921121541813",
-  appId: "1:921121541813:web:573f674229ff36fc54b8fc",
-  measurementId: "G-L7F0XE69EB"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
@@ -21,5 +22,7 @@ const analytics = getAnalytics(app);  // Initialize Analytics
 const auth = getAuth(app);  // Initialize Firebase Authentication
 const googleProvider = new GoogleAuthProvider();  // Initialize Google Auth Provider
 const db = getFirestore(app);  // Initialize Firestore
+const storage = getStorage(app);  // Initialize Firebase Storage
 
-export { auth, googleProvider, db, analytics };  // Exporting Firestore and other services
+// Exporting Firestore, Storage, and other services
+export { auth, googleProvider, db, analytics, storage };

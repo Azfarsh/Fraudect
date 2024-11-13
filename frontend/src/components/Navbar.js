@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-
+import { 
+ 
+  
+  Shield, 
+  
+} from 'lucide-react';
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -8,18 +13,27 @@ const Navbar = () => {
   };
 
   return (
-    <header className="w-full py-4 px-8 bg-gradient-to-r from-blue-500 to-purple-600 shadow-md flex justify-between items-center">
+    <header
+      className="w-full py-1 px-3 shadow-md flex justify-between items-center"
+      style={{ background: 'linear-gradient(80deg, #00188f, #EC008C)' }}
+    >
       <div className="flex items-center">
         <a href="http://localhost:3000/">
-          <img src="/logo.png" alt="Logo" className="h-20 w-auto" />
+        <div className="flex items-center ml-3"> 
+  <Shield size={24} className="text-white" />
+  <span className="text-2xl font-bold ml-2 text-white">
+    Fraudect
+  </span>
+</div>
+
         </a>
       </div>
-      <nav className="flex space-x-6">
+      <nav className="flex space-x-8">
         <a href="http://localhost:3000/" className="text-white hover:text-gray-200">Home</a>
-        <a href="http://localhost:3000/skillbot" className="text-white hover:text-gray-200">Chatbot</a>
-        <a href="http://localhost:3000/resume" className="text-white hover:text-gray-200">Resume</a>
-        <a href="http://localhost:3000/form" className="text-white hover:text-gray-200">Interview</a>
-        <a href="http://localhost:3000/learning" className="text-white hover:text-gray-200">Learn</a>
+        <a href="http://localhost:3000/chatbot" className="text-white hover:text-gray-200">Chatbot</a>
+        <a href="http://localhost:3000/services" className="text-white hover:text-gray-200">Services</a>
+        <a href="http://localhost:3000/about" className="text-white hover:text-gray-200">Interview</a>
+  
       </nav>
       <div className="flex items-center relative">
         <div
@@ -35,7 +49,7 @@ const Navbar = () => {
           </div>
         )}
         <a href="/login">
-          <button className="ml-4 bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-800 shadow-md">GET STARTED</button>
+          <button className="ml-4 bg-purple-700 text-white px-4 py-1 rounded hover:bg-purple-800 shadow-md">GET STARTED</button>
         </a>
       </div>
     </header>
